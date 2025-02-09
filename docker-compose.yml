@@ -1,0 +1,77 @@
+# ***************************************************************
+# Author: Simone Margio
+#
+# All rights reserved. This code is released under the MIT License.
+#
+# Last release date: 09/02/2025
+# ***************************************************************
+#
+# MIT License
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# provided to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+# THE SOFTWARE.
+
+# Sezione dei servizi definiti nel file docker-compose
+services:
+  # Definizione del servizio 'kafka', che rappresenta il container di Kafka
+  kafka:
+    # Nome del container Docker che verrà creato
+    container_name: smkafka
+    
+    # Immagine Docker utilizzata per creare il container
+    # Utilizziamo bitnami in quando è Apache Kafka non detiene la versione 3.6
+    image: docker.io/bitnami/kafka:3.6
+    
+    # Esposizione delle porte per il container, permettendo l'accesso al servizio Kafka
+    # La porta 9092 del container è mappata alla porta 9092 della macchina host
+    ports:
+      - "9092:9092"
+    
+    # Montaggio di un volume per persistere i dati di Kafka
+    # Il volume 'kafka_data' verrà montato sulla cartella /smkafka del container
+    volumes:
+      - "kafka_data:/smkafka"  
+    
+    # Variabili di ambiente per configurare Kafka all'interno del container
+    environment:
+      # Impostazioni KRaft (KRaft mode è il nuovo modo di gestire Kafka senza Zookeeper)
+     
+      # L'ID del nodo Kafka (ogni nodo Kafka in un cluster ha un ID unico)
+      - KAFKA_CFG_NODE_ID=0  
+      # Ruolo del processo: controller e broker (Kafka può essere sia broker che controller)
+      - KAFKA_CFG_PROCESS_ROLES=controller,broker  
+      # Definisce il quorum di votanti per il controller, in questo caso il primo nodo Kafka
+      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=0@kafka:9093 
+    
+      # Impostazioni dei listener per Kafka
+
+      # Kafka ascolta sulla porta 9092 per il traffico client e sulla porta 9093 per il controller
+      - KAFKA_CFG_LISTENERS=PLAINTEXT://0.0.0.0:9092,CONTROLLER://:9093  
+      # Pubblica la porta 9092 come l'indirizzo per il client (usato dagli altri client Kafka)
+      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://localhost:9092  
+      # Configurazione del protocollo di sicurezza (PLAINTEXT=uncripted) per i diversi listener
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      # Nome del listener per il controller, per identificare il traffico del controller
+      - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
+      # Nome del listener utilizzato per la comunicazione tra broker
+      - KAFKA_CFG_INTER_BROKER_LISTENER_NAME=PLAINTEXT
+    
+# Definizione dei volumi, che vengono utilizzati per persistere i dati anche quando il container viene fermato o eliminato
+volumes:
+  kafka_data:
+    driver: local  # Utilizzo del driver 'local' per la gestione del volume, che viene creato sulla macchina host
