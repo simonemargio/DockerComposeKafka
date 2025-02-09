@@ -1,11 +1,3 @@
-# ***************************************************************
-# Author: Simone Margio
-#
-# All rights reserved. This code is released under the MIT License.
-#
-# Last release date: 26/11/2024
-# ***************************************************************
-
 ## MIT License
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
